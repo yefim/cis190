@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <map>
@@ -6,15 +7,25 @@
 
 using namespace std;
 
+void init_rand()
+{
+  srand(time(NULL));
+}
+int rand_up_to(int limit)
+{
+  return (int)((double)rand() / RAND_MAX * limit);
+}
+
 int main()
 {
+  init_rand();
   cout << "What file would you like to ngram? ";
-  string filename = "p-and-p.txt";
-  // cin >> filename;
+  string filename;
+  cin >> filename;
   
   cout << "How many words per gram? ";
-  int length = 2;
-  // cin >> length;
+  int length;
+  cin >> length;
   cout << endl;
 
   ifstream input(filename.c_str());
@@ -27,51 +38,64 @@ int main()
   multimap<string, string> ngrams;
   typedef multimap<string, string>::iterator itor;
 
-  string *words = new string[length];
-  while (input)
+  // dump entire file into a vector
+  vector<string> all_the_words;
+  string word;
+  while (input >> word)
   {
-    for (int i = 0; i < length; i++)
-    {
-      string word;
-      input >> word; // while this
-      words[i] = word;
-    }
-    // add it to the map
-    string key = "";
-    string value = words[length-1];
-    for (int i = 0; i < length - 1; i++)
-    {
-      key = key + words[i] + " ";
-    }
-    ngrams.insert(make_pair(key, value));
-    // cout << key << endl;
+    all_the_words.push_back(word);
   }
 
-  string output;
-  int len = 0;
-  itor previous = ngrams.find("hear "); // must be random
-  // add previous's key and value to output
-  output = previous->first + previous->second;
-  // string word_key; // could set and change this key everytime
+  for (int j = 0; j < all_the_words.size() - length; j++)
+  {
+    string key = "";
+    for (int i = j; i < j + length - 1; i++)
+    {
+      key = key + all_the_words.at(i) + " ";
+    }
+    string value = all_the_words.at(j + length - 1);
+    ngrams.insert(make_pair(key, value));
+  }
+  
+  // get random first key
+  int first_index = rand_up_to(ngrams.size());
+  string word_key;
+  int current = 0;
+  for (itor it = ngrams.begin(); it != ngrams.end(); it++, current++)
+  {
+    if (first_index == current)
+    {
+      word_key = it->first;
+      break;
+    }
+  }
+
+  string output = word_key;
+  int len = length - 1;
   while(len < 100)
   {
-    // the new key is the old key minus the first word plus the old value
-    // int first_space = 0;
-    string key = previous->first + previous->second;
-    itor current = ngrams.find(key);
-    if (current != ngrams.end())
+    pair<itor, itor> range = ngrams.equal_range(word_key);
+    if (range.first != range.second)
     {
-      output = output + current->second;
+      vector<string> vals;
+      for (itor i = range.first; i != range.second; i++)
+      {
+        vals.push_back(i->second);
+      }
+      int r = rand_up_to(vals.size());
+      string next = vals.at(r);
+      output = output + next + " ";
       len++;
+      // the new key is the old key minus the first word plus the old value
+      int first_word = word_key.find_first_of(" ", 0) + 1;
+      word_key = word_key.substr(first_word, word_key.size()) + next + " ";
     }
     else
     {
       break;
     }
   }
-
   cout << output << endl;
 
-  delete [] words;
   return 0;
 }
