@@ -25,10 +25,10 @@ class DoubleLL
   ~DoubleLL();
   DLink* getHead() const;
   DLink* getTail() const;
-  void insert(DLink* where, const string& what);
-  string remove(DLink* where);
+  void insert(DLink* where, const std::string& what);
+  std::string remove(DLink* where);
   int size() const;
-  string nth(int n) const;
+  std::string nth(int n) const;
 };
 
 #endif
