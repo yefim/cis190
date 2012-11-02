@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include "doublell.h"
 
@@ -10,8 +11,12 @@ DoubleLL::DoubleLL()
 }
 DoubleLL::~DoubleLL()
 {
-  delete [] head;
-  delete [] tail;
+  while (head)
+  {
+    DLink* next = head->next;
+    delete head;
+    head = next;
+  }
 }
 DLink* DoubleLL::getHead() const
 {
@@ -23,42 +28,86 @@ DLink* DoubleLL::getTail() const
 }
 void DoubleLL::insert(DLink* where, const string& what)
 {
-  DLink* newlink;
+  DLink* newlink = new DLink();
   newlink->data = what;
-  newlink->next = NULL;
-  newlink->prev = NULL;
-  if (where == NULL)
+  if (!where)
   {
     // check if list is empty
-    if (tail == NULL)
+    if (!tail)
     {
+      newlink->next = NULL;
+      newlink->prev = NULL;
       tail = newlink;
       head = newlink;
     }
     else
     {
-      tail->next = newlink;
+      newlink->next = NULL;
       newlink->prev = tail;
+      tail->next = newlink;
       tail = newlink;
     }
   }
   else
   {
-    // I may be inserting after not before
-    DLink* oldnext = where->next;
-    where->next = newlink;
-    newlink->prev = where;
-    newlink->next = oldnext;
-    oldnext->prev = newlink;
+    // check if inserting before head
+    if (where == head)
+    {
+      where->prev = newlink;
+      newlink->next = where;
+      newlink->prev = NULL;
+      head = newlink;
+    }
+    else
+    {
+      DLink* oldprev = where->prev;
+      where->prev = newlink;
+      newlink->next = where;
+      newlink->prev = oldprev;
+      oldprev->next = newlink;
+    }
   }
 }
 string DoubleLL::remove(DLink* where)
 {
-  return "";
+  if (!where)
+  {
+    return "";
+  }
+  string data = where->data;
+  // need to check if deleting head and/or tail
+  if (where == head && where == tail)
+  {
+    head = NULL;
+    tail = NULL;
+  }
+  else if (where == head)
+  {
+    head = where->next;
+    head->prev = NULL;
+  }
+  else if (where == tail)
+  {
+    tail = tail->prev;
+    tail->next = NULL;
+  }
+  else
+  {
+    DLink* prev = where->prev;
+    DLink* next = where->next;
+    prev->next = next;
+    next->prev = prev;
+  }
+  delete where;
+  return data;
 }
 int DoubleLL::size() const
 {
-  int length = 0;
+  if (!tail)
+  {
+    return 0;
+  }
+  int length = 1;
   DLink* current = head;
   while (current != tail)
   {
@@ -74,7 +123,7 @@ string DoubleLL::nth(int n) const
   while (counter < n)
   {
     // checks for overflow
-    if (current == NULL)
+    if (!current)
     {
       return "";
     }
